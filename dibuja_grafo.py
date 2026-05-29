@@ -19,7 +19,7 @@ $pip install pillow
 
 """
 
-__author__ = 'Escribe aquí tu nombre'
+__author__ = 'Juan Pablo Zurita Murillo'
 
 import blocales
 import random
@@ -142,7 +142,7 @@ class problema_grafica_grafo(blocales.Problema):
         # (default solo cuanta el criterio 1)
         K1 = 1.0
         K2 = 0.0
-        K3 = 0.0
+        K3 = 2.0
         K4 = 0.0
 
         # Genera un diccionario con el estado y la posición
@@ -251,7 +251,7 @@ class problema_grafica_grafo(blocales.Problema):
                 total += (1.0 - (dist / min_dist))
         return total
 
-    def angulo_aristas(self, estado_dic):
+    def angulo_aristas(self, estado_dic, min_angulo=math.pi/6):
         """
         A partir de una posicion "estado", devuelve una penalizacion
         proporcional a cada angulo entre aristas menor a pi/6 rad (30
@@ -267,11 +267,37 @@ class problema_grafica_grafo(blocales.Problema):
         @return: Un número.
 
         """
-        # Agrega el método que considere el angulo entre aristas de
-        # cada vertice. Dale diferente peso a cada criterio hasta
- 
-        return 0
+        total = 0
 
+        for vertice in self.vertices:
+            vecinos = []
+            for (vertice_1, vertice_2) in self.aristas:
+                if vertice_1 == vertice:
+                    vecinos.append(vertice_2)
+                if vertice_2 == vertice:
+                    vecinos.append(vertice_1)
+
+            if len(vecinos) < 2:
+                continue
+
+            for (vecino_1, vecino_2) in itertools.combinations(vecinos, 2):
+                x0, y0 = estado_dic[vertice]
+                x1, y1 = estado_dic[vecino_1]
+                x2, y2 = estado_dic[vecino_2]
+
+                angulo_1 = math.atan2(x1 - x0, y1 - y0)
+                angulo_2 = math.atan2(x2 - x0, y2 - y0)
+
+                diferencia = abs(angulo_1 - angulo_2)
+
+                if diferencia > math.pi:
+                    diferencia = 2.0 * math.pi - diferencia
+
+                if diferencia < min_angulo:
+                    total += (1.0 - (diferencia / min_angulo))
+
+        return total
+        
     def criterio_propio(self, estado_dic):
         """
         Implementa y comenta correctamente un criterio de costo que sea
