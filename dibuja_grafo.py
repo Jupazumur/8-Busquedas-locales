@@ -140,10 +140,10 @@ class problema_grafica_grafo(blocales.Problema):
 
         # Inicializa fáctores lineales para los criterios más importantes
         # (default solo cuanta el criterio 1)
-        K1 = 1.0
-        K2 = 0.0
-        K3 = 2.0
-        K4 = 0.0
+        K1 = 5.0
+        K2 = 2.0
+        K3 = 1.0
+        K4 = 0.5
 
         # Genera un diccionario con el estado y la posición
         estado_dic = self.estado2dic(estado)
@@ -151,7 +151,7 @@ class problema_grafica_grafo(blocales.Problema):
         return (K1 * self.numero_de_cruces(estado_dic) +
                 K2 * self.separacion_vertices(estado_dic) +
                 K3 * self.angulo_aristas(estado_dic) +
-                K4 * self.criterio_propio(estado_dic))
+                K4 * self.excentricidad(estado_dic))
 
         # Como podras ver en los resultados, el costo inicial
         # propuesto no hace figuras particularmente bonitas, y esto es
@@ -297,11 +297,13 @@ class problema_grafica_grafo(blocales.Problema):
                     total += (1.0 - (diferencia / min_angulo))
 
         return total
-        
-    def criterio_propio(self, estado_dic):
+
+    # criterio_propio, criterio propio    
+    def excentricidad(self, estado_dic,proporcion=0.1):
         """
-        Implementa y comenta correctamente un criterio de costo que sea
-        conveniente para que un grafo luzca bien.
+        Calcula el centro geométrico de la imagen y penaliza vértices
+        cercanos al centro. Trata de usar mejor el espacio completo de
+        la imagen.
 
         @param estado_dic: Diccionario cuyas llaves son los vértices
                            del grafo y cuyos valores es una tupla con
@@ -315,7 +317,22 @@ class problema_grafica_grafo(blocales.Problema):
         # costo total con K4 ¿Mejora el resultado? ¿En que mejora el
         # resultado final?
 
-        return 0
+        # Personalmente prefiero una gráfica más dispersa, asi que
+        # si considero que la mejora.
+
+        x0 = self.dim/2
+        y0 = self.dim/2
+        
+        total = 0
+
+        for i in estado_dic:
+            x, y = estado_dic[i]
+
+            distancia = math.sqrt((x-x0)**2 + (y-y0)**2)
+            if distancia < self.dim * proporcion:
+                total += 1/distancia
+
+        return total
 
     def estado2dic(self, estado):
         """
