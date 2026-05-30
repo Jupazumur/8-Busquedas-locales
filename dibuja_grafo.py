@@ -96,13 +96,8 @@ class problema_grafica_grafo(blocales.Problema):
     
     def vecino_aleatorio(self, estado, dmax=10):
         """
-        Encuentra un vecino en forma aleatoria. En estea primera
-        versión lo que hacemos es tomar un valor aleatorio, y
-        sumarle o restarle x pixeles al azar.
-
-        Este es un vecino aleatorio muy malo. Por lo que deberás buscar
-        como hacer un mejor vecino aleatorio y comparar las ventajas de
-        hacer un mejor vecino en el algoritmo de temple simulado.
+        Encuentra un vecino en forma aleatoria. Lo que hacemos es tomar un valor
+        aleatorio, y sumarle o restarle x pixeles al azar.
 
         @param estado: Una tupla con el estado.
         @param dispersion: Un flotante con el valor de dispersión para el
@@ -110,6 +105,31 @@ class problema_grafica_grafo(blocales.Problema):
 
         @return: Una tupla con un estado vecino al estado de entrada.
 
+        """        
+        vecino = list(estado)
+        i = random.randint(0, len(vecino) - 1)
+        
+        # randint es distribución normal uniforme, que causa que
+        # los numeros salgan con chance igual. Entonces los resul-
+        # tados variaban mucho. Aquí se usa una distribución normal:
+        # los resultados van a variar menos y esto es mejor para
+        # el temple simulado.
+        desplazamiento = int(random.gauss(0, dmax / 3.0))
+        
+        vecino[i] = max(10, min(self.dim - 10, vecino[i] + desplazamiento))
+        return tuple(vecino)
+ 
+    def vecino_aleatorio_viejo(self, estado, dmax=10):
+        """
+        Este es un vecino aleatorio muy malo. Encuentra un vecino en forma
+        aleatoria. Lo que hacemos es tomar un valor aleatorio, y sumarle o
+        restarle x pixeles al azar. Conservado para pruebas en el futuro.
+        
+        @param estado: Una tupla con el estado.
+        @param dispersion: Un flotante con el valor de dispersión para el
+                           vertice seleccionado
+
+        @return: Una tupla con un estado vecino al estado de entrada.
         """
         vecino = list(estado)
         i = random.randint(0, len(vecino) - 1)
@@ -117,12 +137,6 @@ class problema_grafica_grafo(blocales.Problema):
                         min(self.dim - 10,
                             vecino[i] + random.randint(-dmax,  dmax)))
         return tuple(vecino)
-
-        
-        # Por supuesto que esta no es la mejor manera de generar vecinos.
-        #
-        # Propon una manera alternativa de vecino_aleatorio y muestra que
-        # con tu propuesta se obtienen resultados mejores o en menor tiempo
 
     def costo(self, estado):
         """
@@ -144,6 +158,19 @@ class problema_grafica_grafo(blocales.Problema):
         K2 = 2.0
         K3 = 1.0
         K4 = 0.5
+
+        # K1 - El más alto porque los cruces son lo que más feo se ve, y en práctica
+        # es lo que más afecta la legibilidad de un gráfico de este estilo.
+
+        # K2 - Similar a la razón del cruce, pero menos importante. Se ve feo si hay
+        # vértices/líneas muy pegadas, aunque no se estén cruzando.
+
+        # K3 - Va más por la estética, pero igual importante para que se pueda leer
+        # bien. Los ángulos muy agudos pueden crear figuras extrañas.
+
+        # K4 - Es la menos importante porque las tres primeras generan resultados
+        # buenos en general, pero por preferencia personal dispersa los vértices
+        # hacia las orillas un poco más.
 
         # Genera un diccionario con el estado y la posición
         estado_dic = self.estado2dic(estado)
@@ -406,21 +433,30 @@ def main():
                                             dimension)
 
     estado_aleatorio = grafo_sencillo.estado_aleatorio()
+
     costo_inicial = grafo_sencillo.costo(estado_aleatorio)
+
     grafo_sencillo.dibuja_grafo(estado_aleatorio, "prueba_inicial.gif")
+
     print("Costo del estado aleatorio: {}".format(costo_inicial))
 
     # Ahora vamos a encontrar donde deben de estar los puntos
     t_inicial = time.time()
+
     solucion = blocales.temple_simulado(grafo_sencillo)
+
     t_final = time.time()
+
     costo_final = grafo_sencillo.costo(solucion)
 
     grafo_sencillo.dibuja_grafo(solucion, "prueba_final.gif")
-    print("\nUtilizando la calendarización por default")
-    print("Costo de la solución encontrada: {}".format(costo_final))
-    print("Tiempo de ejecución en segundos: {}".format(t_final - t_inicial))
 
+    print("\nUtilizando la calendarización por default")
+
+    print("Costo de la solución encontrada: {}".format(costo_final))
+
+    print("Tiempo de ejecución en segundos: {}".format(t_final - t_inicial))
+    
     # ¿Que valores para ajustar el temple simulado son los que mejor
     # resultado dan?
     #
