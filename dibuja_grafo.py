@@ -154,23 +154,11 @@ class problema_grafica_grafo(blocales.Problema):
 
         # Inicializa fáctores lineales para los criterios más importantes
         # (default solo cuanta el criterio 1)
-        K1 = 5.0
-        K2 = 2.0
-        K3 = 1.0
+        K1 = 5
+        K2 = 2
+        K3 = 1
         K4 = 0.5
-
-        # K1 - El más alto porque los cruces son lo que más feo se ve, y en práctica
-        # es lo que más afecta la legibilidad de un gráfico de este estilo.
-
-        # K2 - Similar a la razón del cruce, pero menos importante. Se ve feo si hay
-        # vértices/líneas muy pegadas, aunque no se estén cruzando.
-
-        # K3 - Va más por la estética, pero igual importante para que se pueda leer
-        # bien. Los ángulos muy agudos pueden crear figuras extrañas.
-
-        # K4 - Es la menos importante porque las tres primeras generan resultados
-        # buenos en general, pero por preferencia personal dispersa los vértices
-        # hacia las orillas un poco más.
+        K5 = 1.5
 
         # Genera un diccionario con el estado y la posición
         estado_dic = self.estado2dic(estado)
@@ -178,7 +166,8 @@ class problema_grafica_grafo(blocales.Problema):
         return (K1 * self.numero_de_cruces(estado_dic) +
                 K2 * self.separacion_vertices(estado_dic) +
                 K3 * self.angulo_aristas(estado_dic) +
-                K4 * self.excentricidad(estado_dic))
+                K4 * self.excentricidad(estado_dic) +
+                K5 * self.longitud_aristas(estado_dic))
 
         # Como podras ver en los resultados, el costo inicial
         # propuesto no hace figuras particularmente bonitas, y esto es
@@ -199,7 +188,23 @@ class problema_grafica_grafo(blocales.Problema):
         # los subcriterios. ¿Que valores de diste a K1, K2 y K3 respectivamente?
         # 
         # Justifica tu criterio
-  
+
+        # K1 - El más alto porque los cruces son lo que más feo se ve, y en práctica
+        # es lo que más afecta la legibilidad de un gráfico de este estilo.
+
+        # K2 - Similar a la razón del cruce, pero menos importante. Se ve feo si hay
+        # vértices/líneas muy pegadas, aunque no se estén cruzando.
+
+        # K3 - Va más por la estética, pero igual importante para que se pueda leer
+        # bien. Los ángulos muy agudos pueden crear figuras extrañas.
+
+        # K5 - Este criterio ayuda principalmente con los nodos hojas (en el ejemplo
+        # suele ser la D). Los nodos hojas tienden a irse muy lejos de los demás y es-
+        # to ayuda en esos casos.
+
+        # K4 - Es la menos importante porque las cuatro primeras generan resultados
+        # buenos en general, pero por preferencia personal dispersa los vértices
+        # hacia las orillas un poco más.
 
     def numero_de_cruces(self, estado_dic):
         """
@@ -312,8 +317,8 @@ class problema_grafica_grafo(blocales.Problema):
                 x1, y1 = estado_dic[vecino_1]
                 x2, y2 = estado_dic[vecino_2]
 
-                angulo_1 = math.atan2(x1 - x0, y1 - y0)
-                angulo_2 = math.atan2(x2 - x0, y2 - y0)
+                angulo_1 = math.atan2(y1 - y0, x1 - x0)
+                angulo_2 = math.atan2(y2 - y0, x2 - x0)
 
                 diferencia = abs(angulo_1 - angulo_2)
 
@@ -326,7 +331,7 @@ class problema_grafica_grafo(blocales.Problema):
         return total
 
     # criterio_propio, criterio propio    
-    def excentricidad(self, estado_dic,proporcion=0.1):
+    def excentricidad(self, estado_dic, proporcion=0.1):
         """
         Calcula el centro geométrico de la imagen y penaliza vértices
         cercanos al centro. Trata de usar mejor el espacio completo de
@@ -336,6 +341,9 @@ class problema_grafica_grafo(blocales.Problema):
                            del grafo y cuyos valores es una tupla con
                            la posición (x, y) de ese vértice en el
                            dibujo.
+
+        @proporcion: Porcentaje de la dimensión que se considera acep-
+                     table.
 
         @return: Un número.
 
@@ -355,10 +363,37 @@ class problema_grafica_grafo(blocales.Problema):
         for i in estado_dic:
             x, y = estado_dic[i]
 
-            distancia = math.sqrt((x-x0)**2 + (y-y0)**2)
+            distancia = math.sqrt((x-x0)**2 + (y-y0)**2) + 0.001
             if distancia < self.dim * proporcion:
                 total += 1/distancia
 
+        return total
+    
+    def longitud_aristas(self, estado_dic, longitud_ideal=180):
+        """
+        Si una arista es más larga que la longitud ideal, añade una penali-
+        zación proporcional al exceso.
+        
+        @param estado_dic: Diccionario cuyas llaves son los vértices
+                    del grafo y cuyos valores es una tupla con
+                    la posición (x, y) de ese vértice en el
+                    dibujo.
+        
+        @param longitud_ideal: Distancia máxima tolerable antes de penalizar.
+        
+        @return: Un número
+        """
+        total = 0
+        
+        for (vertice_1, vertice_2) in self.aristas:
+            x1, y1 = estado_dic[vertice_1]
+            x2, y2 = estado_dic[vertice_2]
+            
+            distancia = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+            if distancia > longitud_ideal:
+                total += (distancia - longitud_ideal) / longitud_ideal
+                
         return total
 
     def estado2dic(self, estado):
@@ -374,7 +409,7 @@ class problema_grafica_grafo(blocales.Problema):
         """
         return {self.vertices[i]: (estado[2 * i], estado[2 * i + 1])
                 for i in range(len(self.vertices))}
-
+    
     def dibuja_grafo(self, estado=None, filename="prueba.gif"):
         """
         Dibuja el grafo utilizando el modulo pillow, donde estado es una
@@ -404,11 +439,21 @@ class problema_grafica_grafo(blocales.Problema):
 
         imagen.save(filename)
 
+def calendar_lineal(T_max):
+    i = 0
+    while True:
+        yield T_max / (i + 1)
+        i += 1
+
+def calendar_log(T_max):
+    i = 0
+    while True:
+        yield T_max / (math.log(i + 1) + 1)
+        i += 1
 
 def main():
     """
     La función principal
-
     """
 
     # Vamos a definir un grafo sencillo
@@ -443,7 +488,9 @@ def main():
     # Ahora vamos a encontrar donde deben de estar los puntos
     t_inicial = time.time()
 
-    solucion = blocales.temple_simulado(grafo_sencillo)
+    calendar = calendar_lineal(250)
+
+    solucion = blocales.temple_simulado(grafo_sencillo, calendarizador=calendar)
 
     t_final = time.time()
 
