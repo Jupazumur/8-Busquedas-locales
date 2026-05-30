@@ -65,7 +65,7 @@ class problema_grafica_grafo(blocales.Problema):
 
            s = [s(1), s(2),..., s(2*len(vertices))],
 
-        en donde s(i) \in {10, 11, ..., self.dim - 10} es la posición
+        en donde s(i) in {10, 11, ..., self.dim - 10} es la posición
         en x del nodo i/2 si i es par, o la posicion en y
         del nodo (i-1)/2 si i es non y(osease las parejas (x,y)).
 
@@ -190,7 +190,7 @@ class problema_grafica_grafo(blocales.Problema):
         # Justifica tu criterio
 
         # K1 - El más alto porque los cruces son lo que más feo se ve, y en práctica
-        # es lo que más afecta la legibilidad de un gráfico de este estilo.
+        # es lo que más afecta la legibilidad de un grafo de este estilo.
 
         # K2 - Similar a la razón del cruce, pero menos importante. Se ve feo si hay
         # vértices/líneas muy pegadas, aunque no se estén cruzando.
@@ -202,7 +202,7 @@ class problema_grafica_grafo(blocales.Problema):
         # suele ser la D). Los nodos hojas tienden a irse muy lejos de los demás y es-
         # to ayuda en esos casos.
 
-        # K4 - Es la menos importante porque las cuatro primeras generan resultados
+        # K4 - Es el menos importante porque los cuatro primeros generan resultados
         # buenos en general, pero por preferencia personal dispersa los vértices
         # hacia las orillas un poco más.
 
@@ -451,11 +451,10 @@ def calendar_log(T_max):
         yield T_max / (math.log(i + 1) + 1)
         i += 1
 
-def main():
+def prueba():
     """
     La función principal
     """
-
     # Vamos a definir un grafo sencillo
     vertices_sencillo = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
     aristas_sencillo = [('B', 'G'),
@@ -483,7 +482,7 @@ def main():
 
     grafo_sencillo.dibuja_grafo(estado_aleatorio, "prueba_inicial.gif")
 
-    print("Costo del estado aleatorio: {}".format(costo_inicial))
+    print("Costo del estado aleatorio 1: {}".format(costo_inicial))
 
     # Ahora vamos a encontrar donde deben de estar los puntos
     t_inicial = time.time()
@@ -498,12 +497,67 @@ def main():
 
     grafo_sencillo.dibuja_grafo(solucion, "prueba_final.gif")
 
-    print("\nUtilizando la calendarización por default")
+    print("Costo de la solución encontrada 1: {}".format(costo_final))
 
-    print("Costo de la solución encontrada: {}".format(costo_final))
-
-    print("Tiempo de ejecución en segundos: {}".format(t_final - t_inicial))
+    print("Tiempo de ejecución en segundos 1: {}".format(t_final - t_inicial))
     
+def prueba_2():
+    """
+    La función principal
+    """
+    # Vamos a definir un grafo sencillo
+    vertices_sencillo = ['1', '2', '3', '4', '5', '6', '7', '8']
+    aristas_sencillo = [('1', '2'),
+                        ('4', '6'),
+                        ('8', '3'),
+                        ('4', '7'),
+                        ('3', '8'),
+                        ('5', '2'),
+                        ('8', '1'),
+                        ('4', '3'),
+                        ('4', '1'),
+                        ('6', '1'),
+                        ('1', '7')]
+    dimension = 400
+
+    # Y vamos a hacer un dibujo del grafo sin decirle como hacer para
+    # ajustarlo.
+    grafo_sencillo = problema_grafica_grafo(vertices_sencillo,
+                                            aristas_sencillo,
+                                            dimension)
+
+    estado_aleatorio = grafo_sencillo.estado_aleatorio()
+
+    costo_inicial = grafo_sencillo.costo(estado_aleatorio)
+
+    grafo_sencillo.dibuja_grafo(estado_aleatorio, "prueba_2_inicial.gif")
+
+    print("Costo del estado aleatorio 2: {}".format(costo_inicial))
+
+    # Ahora vamos a encontrar donde deben de estar los puntos
+    t_inicial = time.time()
+
+    calendar = calendar_lineal(250)
+
+    solucion = blocales.temple_simulado(grafo_sencillo, calendarizador=calendar)
+
+    t_final = time.time()
+
+    costo_final = grafo_sencillo.costo(solucion)
+
+    grafo_sencillo.dibuja_grafo(solucion, "prueba_2_final.gif")
+
+    print("Costo de la solución encontrada 2: {}".format(costo_final))
+
+    print("Tiempo de ejecución en segundos 2: {}".format(t_final - t_inicial))
+
+if __name__ == '__main__':
+    
+    # Caso base
+    prueba()
+    # Grafo feo
+    prueba_2()
+
     # ¿Que valores para ajustar el temple simulado son los que mejor
     # resultado dan?
     #
@@ -520,9 +574,11 @@ def main():
     #
     # Inventate un grafo más feo y muestra como el temple simulado lo hace lucir mejor.
     #
+    
     # Escribe aqui tus conclusiones
-    #
 
-
-if __name__ == '__main__':
-    main()
+    # El temple simulado definitivamente hace una diferencia en cuanto a la estética de
+    # los grafos. No estoy seguro si los parámetros K que decidí usar son los óptimos,
+    # pero incluso si no lo son, los resultados (_final) en comparación a las pruebas
+    # iniciales son mucho mejores. Se puede notar más la diferencia con el grafo "feo" 
+    # para el cual asigne las aristas al azar.
